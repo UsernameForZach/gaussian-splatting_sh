@@ -52,7 +52,24 @@ C4 = [
     -1.7701307697799304,
     0.6258357354491761,
 ]   
+C5=[
+    -0.6563820568,
+    8.30264926,
+    -0.6918874383,
+    4.793536785,
+    -0.4529466512,
+    0.1169503225,
+    -0.4529466512,
+    2.396768392,
+    -0.4892382994,
+    2.075662315,
+    -0.6563820568
+]
 
+##shs_view == sh
+#shs_view = pc.get_features.transpose(1, 2).view(-1, 3, (pc.max_sh_degree+1)**2)
+#in gaussian_model.py: self.max_sh_degree = sh_degree  
+#in __init__.py: self.sh_degree = 3
 
 def eval_sh(deg, sh, dirs):
     """
@@ -82,6 +99,8 @@ def eval_sh(deg, sh, dirs):
         if deg > 1:
             xx, yy, zz = x * x, y * y, z * z
             xy, yz, xz = x * y, y * z, x * z
+            xyz = x *y *z
+            y4,x4, z4 = y*y*y*y, x*x*x*x, z*z*z*z
             result = (result +
                     C2[0] * xy * sh[..., 4] +
                     C2[1] * yz * sh[..., 5] +
@@ -109,6 +128,19 @@ def eval_sh(deg, sh, dirs):
                             C4[6] * (xx - yy) * (7 * zz - 1) * sh[..., 22] +
                             C4[7] * xz * (xx - 3 * yy) * sh[..., 23] +
                             C4[8] * (xx * (xx - 3 * yy) - yy * (3 * xx - yy)) * sh[..., 24])
+                    if deg > 4:
+                        result = (result +
+                                C5[0] * y*(5*x4 - 10 * yy * xx + y4) * sh[..., 24] +
+                                C5[1] *  xy*(xx-yy)*z* sh[..., 25] +
+                                C5[2] * y*(3*xx-yy)*(-1 + 9 *zz) * sh[..., 26] +                               
+                                C5[3] * xyz * (-1 + 3* zz) * sh[..., 27] +       
+                                C5[4] * y*(-14*zz + 21 * z4 +1) * sh[..., 28] +
+                                C5[5] * z * (63 * z4 - 70 * zz +15) * sh[..., 29] +
+                                C5[6] * x * (-14*zz + 21 * z4 + 1) * sh[..., 30] +
+                                C5[7] * (xx - yy) * z * (-1 + 3 * zz) * sh[..., 31] +
+                                C5[8] * x * (xx - 3 * yy) * (-1 + 9 * zz) * sh[..., 32]+
+                                C5[9] * (x4 - 6 * yy * xx + y4) * z * sh[..., 33]+
+                                C5[10] * x * (x4 - 10*yy*xx + 5 * y4) * sh[..., 34])
     return result
 
 def RGB2SH(rgb):
